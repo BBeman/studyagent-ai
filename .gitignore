@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+*.egg-info/
+
+# Node
+node_modules/
+package-lock.json
+
+# IDE
+.DS_Store
+.vscode/
+.idea/
+
+# AWS / AgentCore (contains account IDs, ARNs, role names)
+.bedrock_agentcore.yaml
+.bedrock_agentcore/studyagent/dependencies.hash
+.bedrock_agentcore/studyagent/dependencies.zip
+policy.json
+trust-policy.json
+
+# Reports and documents (not code)
+*.docx
+*.pptx
+*.txt
+*.md
+!README.md
+!requirements.txt
+!agentcore_requirements.txt
+
+# Report generator (not part of the agent)
+generate_report.js
+package.json
+
+# Uploads and temp files
+uploads/
+*.apkg
+*.tmp
+
+# Environment
+.env
+.env.*
+
+# Test output (not test code)
+tests/test_results.json
+
+# AgentCore devguide docs (not our code)
+devguide/
+
+# Misc
+=4.0.0

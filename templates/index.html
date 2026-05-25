@@ -1,0 +1,2043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyAgent AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #E03C31;
+            --primary-dark: #C5322A;
+            --primary-light: #FDE8E7;
+            --bg-dark: #F5F5F5;
+            --bg-card: #FFFFFF;
+            --bg-input: #F2F2F2;
+            --text-primary: #2D3B45;
+            --text-secondary: #6B7B8D;
+            --border: #C7CDD1;
+            --success: #0B874B;
+            --error: #D4351C;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            border-top: 3px solid var(--primary);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1.25rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 900;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin: 1rem 0 0.5rem;
+            padding: 0 0.5rem;
+        }
+
+        .module-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .module-item {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 0.25rem;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.15s;
+        }
+
+        .module-item:hover {
+            background: var(--bg-input);
+            transform: translateX(3px);
+        }
+
+        .module-item.active {
+            background: rgba(224, 60, 49, 0.7);
+            color: #FFFFFF;
+        }
+
+        .module-item .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .module-item .doc-count {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .module-item.active .doc-count {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .module-item .expand-icon {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            transition: transform 0.2s;
+        }
+
+        .module-item.expanded .expand-icon {
+            transform: rotate(90deg);
+        }
+
+        .module-item.active .expand-icon {
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* Document list inside module */
+        .doc-list {
+            display: none;
+            padding: 0.25rem 0 0.25rem 0.5rem;
+            margin-top: 0.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .module-item.expanded .doc-list {
+            display: block;
+        }
+
+        .doc-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.375rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .doc-item:hover {
+            background: var(--bg-input);
+        }
+
+        .doc-item .doc-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+            margin-right: 0.5rem;
+        }
+
+        .doc-item .delete-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.125rem 0.375rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+            opacity: 0;
+            transition: all 0.15s;
+        }
+
+        .doc-item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .doc-item .delete-btn:hover {
+            background: rgba(212, 53, 28, 0.1);
+            color: var(--error);
+        }
+
+        .doc-empty {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            padding: 0.25rem 0.5rem;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            border-top: 1px solid var(--border);
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+
+        .upload-zone {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg-input);
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(224, 60, 49, 0.08);
+        }
+
+        .upload-zone input {
+            display: none;
+        }
+
+        .upload-icon {
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .upload-text {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .module-input {
+            margin-top: 0.75rem;
+        }
+
+        .module-input input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        .module-input input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(224, 60, 49, 0.15);
+        }
+
+        /* Main Chat Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: #FFFFFF;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .current-module {
+            font-weight: 600;
+        }
+
+        .header-actions button {
+            background: #FFFFFF;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+
+        .header-actions button:hover {
+            background: var(--bg-input);
+            border-color: var(--text-secondary);
+        }
+
+        .header-actions button:active {
+            transform: scale(0.97);
+        }
+
+        /* Messages */
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: messageIn 0.3s ease-out;
+        }
+
+        @keyframes messageIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            display: none;
+        }
+
+        .message-content {
+            padding: 0.25rem 0;
+            max-width: 80%;
+            line-height: 1.6;
+        }
+
+        .message.user .message-content {
+            background: rgba(224, 60, 49, 0.7);
+            color: #FFFFFF;
+            border: 1px solid rgba(197, 50, 42, 0.7);
+            padding: 0.5rem 0.875rem;
+            border-radius: 10px;
+            line-height: 1.4;
+        }
+
+        .message-content pre {
+            background: #2D3B45;
+            color: #F5F5F5;
+            padding: 1rem;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 0.5rem 0;
+            border: 1px solid rgba(45, 59, 69, 0.3);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .message-content code {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+        }
+
+        .message-content p code {
+            background: rgba(224, 60, 49, 0.06);
+            color: var(--primary-dark);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.8125rem;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 0.5rem;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-4px); }
+        }
+
+        /* Tool Badge */
+        .tool-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 0.25rem 0.625rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            border: 1px solid rgba(224, 60, 49, 0.2);
+        }
+
+        /* Input Area */
+        .input-area {
+            padding: 0.75rem 1.5rem 1rem;
+            border-top: none;
+            background: transparent;
+            position: relative;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 0.75rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .input-wrapper textarea {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(199, 205, 209, 0.5);
+            border-radius: 24px;
+            padding: 0.875rem 1.25rem;
+            color: var(--text-primary);
+            font-size: 1rem;
+            resize: none;
+            min-height: 48px;
+            max-height: 200px;
+            font-family: inherit;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        .input-wrapper textarea:focus {
+            outline: none;
+            border-color: rgba(224, 60, 49, 0.4);
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+        }
+
+        .send-btn {
+            background: var(--primary);
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.15s;
+        }
+
+        .send-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.05);
+        }
+
+        .send-btn:active {
+            transform: scale(0.92);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .send-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        /* Search Mode Toggle */
+        .search-mode-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 0 0.25rem;
+        }
+
+        .toggle-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(199, 205, 209, 0.5);
+            border-radius: 20px;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .toggle-pill:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .toggle-pill.active {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .toggle-pill .toggle-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--border);
+            transition: background 0.2s;
+        }
+
+        .toggle-pill.active .toggle-dot {
+            background: var(--primary);
+        }
+
+        .search-mode-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .quick-action {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(199, 205, 209, 0.5);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .quick-action:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
+            transform: translateY(-1px);
+        }
+
+        /* Validation Badge */
+        .validation-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        .validation-badge.grounded-yes {
+            background: rgba(11, 135, 75, 0.08);
+            color: #0B874B;
+            border: 1px solid rgba(11, 135, 75, 0.25);
+        }
+
+        .validation-badge.grounded-partial {
+            background: rgba(158, 119, 0, 0.08);
+            color: #9E7700;
+            border: 1px solid rgba(158, 119, 0, 0.25);
+        }
+
+        .validation-badge.grounded-no {
+            background: rgba(212, 53, 28, 0.08);
+            color: #D4351C;
+            border: 1px solid rgba(212, 53, 28, 0.25);
+        }
+
+        .validation-badge.grounded-na {
+            background: rgba(107, 123, 141, 0.08);
+            color: var(--text-secondary);
+            border: 1px solid rgba(107, 123, 141, 0.2);
+        }
+
+        .validation-badge .badge-icon {
+            font-size: 0.875rem;
+        }
+
+        .validation-badge {
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+
+        .validation-badge:hover {
+            opacity: 0.8;
+        }
+
+        .validation-tooltip {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        /* Verification Reasoning Panel */
+        .verification-panel {
+            display: none;
+            margin-top: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid rgba(107, 123, 141, 0.2);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+            animation: panelSlide 0.2s ease-out;
+        }
+
+        .verification-panel.open {
+            display: block;
+        }
+
+        @keyframes panelSlide {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .verification-panel-header {
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-primary);
+            margin-bottom: 0.375rem;
+        }
+
+        .verification-panel-body {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* Feedback Buttons (thumbs up/down) */
+        .feedback-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.375rem;
+        }
+
+        .feedback-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border: 1px solid rgba(107, 123, 141, 0.25);
+            border-radius: 6px;
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            transition: all 0.15s;
+        }
+
+        .feedback-btn:hover {
+            background: rgba(107, 123, 141, 0.08);
+        }
+
+        .feedback-btn.selected-up {
+            background: rgba(11, 135, 75, 0.1);
+            border-color: #0B874B;
+            color: #0B874B;
+        }
+
+        .feedback-btn.selected-down {
+            background: rgba(212, 53, 28, 0.1);
+            border-color: #D4351C;
+            color: #D4351C;
+        }
+
+        .feedback-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        /* Flashcard Export Buttons */
+        .export-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .export-btn {
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .export-btn:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .export-btn.anki { border-color: #3B82F6; color: #3B82F6; }
+        .export-btn.anki:hover { background: #EFF6FF; }
+        .export-btn.csv-export { border-color: #10B981; color: #10B981; }
+        .export-btn.csv-export:hover { background: #ECFDF5; }
+
+        /* Interactive Flip Cards */
+        .flashcard-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin: 0.75rem 0;
+            width: 100%;
+        }
+
+        /* Expand assistant message when it has flashcards */
+        .message:not(.user) .message-content.has-flashcards {
+            max-width: 100%;
+            width: 100%;
+        }
+
+        .flashcard {
+            perspective: 800px;
+            height: 220px;
+            cursor: pointer;
+        }
+
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s ease;
+            transform-style: preserve-3d;
+        }
+
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front,
+        .flashcard-back {
+            position: absolute;
+            inset: 0;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 12px;
+            padding: 1.5rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            overflow-y: auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .flashcard-front {
+            background: var(--bg-card);
+            border: 2px solid var(--primary);
+            color: var(--text-primary);
+        }
+
+        .flashcard-back {
+            background: var(--primary);
+            color: #fff;
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-number {
+            position: absolute;
+            top: 0.5rem;
+            left: 0.75rem;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            opacity: 0.5;
+        }
+
+        .flashcard-hint {
+            position: absolute;
+            bottom: 0.5rem;
+            right: 0.75rem;
+            font-size: 0.6rem;
+            opacity: 0.45;
+        }
+
+        .flashcard-content {
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            z-index: 1000;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            color: var(--text-primary);
+        }
+
+        .toast.success {
+            border-color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-color: var(--error);
+            border-left: 4px solid var(--error);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Welcome Screen */
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .welcome-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+            animation: fadeInUp 0.3s ease-out both;
+        }
+
+        .welcome-icon svg {
+            width: 32px;
+            height: 32px;
+            stroke: var(--primary);
+            fill: none;
+            stroke-width: 1.75;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .welcome-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            animation: fadeInUp 0.4s ease-out both;
+            animation-delay: 0.05s;
+        }
+
+        .welcome-subtitle {
+            color: var(--text-secondary);
+            max-width: 400px;
+            line-height: 1.6;
+            animation: fadeInUp 0.4s ease-out both;
+            animation-delay: 0.1s;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 2rem;
+            max-width: 500px;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            padding: 1.25rem;
+            border-radius: 12px;
+            text-align: left;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s, box-shadow 0.2s;
+            animation: fadeInUp 0.4s ease-out both;
+        }
+
+        .feature-card:nth-child(1) { animation-delay: 0.1s; }
+        .feature-card:nth-child(2) { animation-delay: 0.2s; }
+        .feature-card:nth-child(3) { animation-delay: 0.3s; }
+        .feature-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .feature-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feature-card .icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-card .icon svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--primary);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .feature-card h3 {
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .feature-card p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #A0AAB4;
+        }
+
+        /* Hamburger toggle - hidden on desktop */
+        .sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--bg-input);
+        }
+
+        /* Sidebar overlay - hidden on desktop */
+        .sidebar-overlay {
+            display: none;
+        }
+
+        /* ===== Mobile ===== */
+        @media (max-width: 768px) {
+            .sidebar-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                z-index: 200;
+                transform: translateX(-100%);
+                transition: transform 0.25s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.4);
+                z-index: 199;
+                display: none;
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .messages-container {
+                padding: 1rem;
+            }
+
+            .message {
+                gap: 0.5rem;
+            }
+
+            .message-content {
+                max-width: 90%;
+            }
+
+
+
+            .input-area {
+                padding: 0.75rem;
+            }
+
+            .input-wrapper textarea {
+                min-height: 44px;
+                padding: 0.625rem 0.75rem;
+                font-size: 0.9375rem;
+            }
+
+            .send-btn {
+                width: 44px;
+                height: 44px;
+            }
+
+            .quick-actions {
+                gap: 0.375rem;
+            }
+
+            .quick-action {
+                padding: 0.375rem 0.75rem;
+                font-size: 0.8125rem;
+            }
+
+            .chat-header {
+                padding: 0.75rem 1rem;
+            }
+
+            .welcome-title {
+                font-size: 1.25rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+                max-width: 100%;
+            }
+
+            .feature-card {
+                padding: 1rem;
+            }
+
+            .flashcard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .flashcard {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar overlay for mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 19.5C4 18.837 4.26339 18.2011 4.73223 17.7322C5.20107 17.2634 5.83696 17 6.5 17H20" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M6.5 2H20V22H6.5C5.83696 22 5.20107 21.7366 4.73223 21.2678C4.26339 20.7989 4 20.163 4 19.5V4.5C4 3.83696 4.26339 3.20107 4.73223 2.73223C5.20107 2.26339 5.83696 2 6.5 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M9 7H15" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M9 11H13" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <span class="logo-text">StudyAgent AI</span>
+            </div>
+
+            <div class="section-title">Modules</div>
+            <div class="module-list" id="moduleList">
+                <div class="module-item active" data-module="General">
+                    <div>General</div>
+                    <div class="doc-count">No documents</div>
+                </div>
+            </div>
+
+            <div class="upload-section">
+                <div class="section-title">Upload Materials</div>
+                <div class="upload-zone" id="uploadZone">
+                    <input type="file" id="fileInput" accept=".pdf,.docx,.txt,.md">
+                    <div class="upload-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    </div>
+                    <div class="upload-text">Drop files here or click to upload</div>
+                </div>
+                <div class="module-input">
+                    <input type="text" id="uploadModule" placeholder="Module name (e.g., CS101)">
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="chat-header">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                    <div>
+                        <span class="current-module" id="currentModule">General</span>
+                        <span style="color: var(--text-secondary); margin-left: 0.5rem;">study session</span>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button onclick="clearChat()">Clear Chat</button>
+                </div>
+            </header>
+
+            <div class="messages-container" id="messagesContainer">
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-icon">
+                        <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/></svg>
+                    </div>
+                    <h1 class="welcome-title">Welcome to StudyAgent AI</h1>
+                    <p class="welcome-subtitle">
+                        Your AI-powered study companion. Upload your course materials and ask questions to learn more effectively.
+                    </p>
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <div class="icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+                            <h3>Ask Questions</h3>
+                            <p>Get explanations from your materials</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="icon"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+                            <h3>Generate Quizzes</h3>
+                            <p>Test your knowledge with practice questions</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+                            <h3>Create Summaries</h3>
+                            <p>Get concise summaries of topics</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+                            <h3>Make Flashcards</h3>
+                            <p>Generate flashcards for revision</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <textarea
+                        id="messageInput"
+                        placeholder="Ask a question about your study materials..."
+                        rows="1"
+                        onkeydown="handleKeyDown(event)"
+                    ></textarea>
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                    </button>
+                </div>
+                <div class="search-mode-bar">
+                    <span class="search-mode-label">Search:</span>
+                    <div class="toggle-pill" id="deepResearchToggle" onclick="toggleDeepResearch()">
+                        <span class="toggle-dot"></span>
+                        Deep Research
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <button class="quick-action" onclick="quickAction('Explain the main concepts from my materials')">Explain concepts</button>
+                    <button class="quick-action" onclick="quickAction('Create a quiz with 5 questions')">Quiz me</button>
+                    <button class="quick-action" onclick="quickAction('Summarize the key points')">Summarize</button>
+                    <button class="quick-action" onclick="quickAction('Generate 10 flashcards')">Flashcards</button>
+                    <button class="quick-action" onclick="quickAction('Search the web for recent developments on this topic')">Web search</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // State - restore from localStorage or create new
+        let currentModule = localStorage.getItem('studyagent_module') || 'General';
+        let sessionId = localStorage.getItem('studyagent_session') || ('session_' + Date.now());
+        let isStreaming = false;
+        let deepResearch = false;
+        let chatHistory = []; // [{role, content, validation?}]
+
+        // Persist session ID so it survives reloads
+        localStorage.setItem('studyagent_session', sessionId);
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadModules();
+            setupFileUpload();
+            autoResizeTextarea();
+            restoreChatHistory();
+            document.getElementById('currentModule').textContent = currentModule;
+        });
+
+        // Load modules from server
+        async function loadModules() {
+            try {
+                const response = await fetch('/api/modules');
+                const data = await response.json();
+
+                const moduleList = document.getElementById('moduleList');
+                moduleList.innerHTML = '';
+
+                // Always add General
+                const modules = data.modules.length > 0 ? data.modules : ['General'];
+                if (!modules.includes('General')) {
+                    modules.unshift('General');
+                }
+
+                for (const module of modules) {
+                    const docsResponse = await fetch(`/api/documents?module=${encodeURIComponent(module)}`);
+                    const docsData = await docsResponse.json();
+                    const docs = docsData.documents || [];
+                    const docCount = docs.length;
+
+                    const item = document.createElement('div');
+                    item.className = `module-item ${module === currentModule ? 'active' : ''}`;
+                    item.dataset.module = module;
+
+                    // Build document list HTML
+                    let docListHtml = '';
+                    if (docs.length > 0) {
+                        docListHtml = docs.map(doc => {
+                            const name = doc.filename || doc.key?.split('/').pop() || 'Unknown';
+                            const key = doc.key || doc.s3_key || '';
+                            return `<div class="doc-item">
+                                <span class="doc-name" title="${name}">${name}</span>
+                                <button class="delete-btn" onclick="deleteDocument(event, '${key.replace(/'/g, "\\'")}', '${module}')" title="Delete">✕</button>
+                            </div>`;
+                        }).join('');
+                    } else {
+                        docListHtml = '<div class="doc-empty">No files yet</div>';
+                    }
+
+                    item.innerHTML = `
+                        <div class="module-header" onclick="selectModule('${module}')">
+                            <div>
+                                <div>${module}</div>
+                                <div class="doc-count">${docCount} document${docCount !== 1 ? 's' : ''}</div>
+                            </div>
+                            <span class="expand-icon">&#9654;</span>
+                        </div>
+                        <div class="doc-list">${docListHtml}</div>
+                    `;
+                    item.querySelector('.module-header').addEventListener('click', (e) => {
+                        // Toggle expand on click
+                        item.classList.toggle('expanded');
+                    });
+                    moduleList.appendChild(item);
+                }
+            } catch (error) {
+                console.error('Failed to load modules:', error);
+            }
+        }
+
+        function selectModule(module) {
+            currentModule = module;
+            localStorage.setItem('studyagent_module', module);
+            document.getElementById('currentModule').textContent = module;
+
+            document.querySelectorAll('.module-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.module === module);
+            });
+
+            // Update session module
+            fetch(`/api/session/${sessionId}/module`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ module })
+            });
+        }
+
+        async function deleteDocument(event, s3Key, module) {
+            event.stopPropagation();
+            const fileName = s3Key.split('/').pop();
+            if (!confirm(`Delete "${fileName}" from ${module}?`)) return;
+
+            try {
+                const response = await fetch(`/api/documents/${encodeURIComponent(s3Key)}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(`Deleted "${fileName}"`, 'success');
+                    loadModules();
+                } else {
+                    showToast(data.error || 'Delete failed', 'error');
+                }
+            } catch (error) {
+                showToast('Delete failed: ' + error.message, 'error');
+            }
+        }
+
+        // File Upload
+        function setupFileUpload() {
+            const uploadZone = document.getElementById('uploadZone');
+            const fileInput = document.getElementById('fileInput');
+
+            uploadZone.onclick = () => fileInput.click();
+
+            uploadZone.ondragover = (e) => {
+                e.preventDefault();
+                uploadZone.classList.add('dragover');
+            };
+
+            uploadZone.ondragleave = () => {
+                uploadZone.classList.remove('dragover');
+            };
+
+            uploadZone.ondrop = (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length) uploadFile(files[0]);
+            };
+
+            fileInput.onchange = () => {
+                if (fileInput.files.length) {
+                    uploadFile(fileInput.files[0]);
+                }
+            };
+        }
+
+        async function uploadFile(file) {
+            const module = document.getElementById('uploadModule').value || 'General';
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('module', module);
+
+            showToast('Uploading to S3...', 'info');
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(`Uploaded "${data.filename}" to ${data.module}`, 'success');
+                    loadModules();
+                } else {
+                    showToast(data.error || 'Upload failed', 'error');
+                }
+            } catch (error) {
+                showToast('Upload failed: ' + error.message, 'error');
+            }
+        }
+
+        // Chat
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function toggleDeepResearch() {
+            deepResearch = !deepResearch;
+            document.getElementById('deepResearchToggle').classList.toggle('active', deepResearch);
+        }
+
+        function quickAction(prompt) {
+            document.getElementById('messageInput').value = prompt;
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+
+            if (!message || isStreaming) return;
+
+            if (message.length > 10000) {
+                showToast(`Message too long (${message.length} chars). Maximum is 10,000 characters.`, 'error');
+                return;
+            }
+
+            // Hide welcome screen
+            const welcome = document.getElementById('welcomeScreen');
+            if (welcome) welcome.style.display = 'none';
+
+            // Add user message and save to history
+            addMessage('user', message);
+            chatHistory.push({ role: 'user', content: message });
+            saveChatHistory();
+            input.value = '';
+            input.style.height = 'auto';
+
+            // Show typing indicator
+            const typingId = showTyping();
+            isStreaming = true;
+            document.getElementById('sendBtn').disabled = true;
+
+            // Track response outside try so catch can access it
+            let assistantMessage = '';
+            let lastValidation = null;
+            let messageEl = null;
+            let responseSaved = false;
+
+            try {
+                // Use streaming endpoint
+                const response = await fetch('/api/chat/stream', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: deepResearch ? '[Deep Research Mode] ' + message : message,
+                        session_id: sessionId,
+                        module: currentModule
+                    })
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+
+                                if (data.type === 'text') {
+                                    // Remove typing indicator on first text
+                                    if (!messageEl) {
+                                        removeTyping(typingId);
+                                        messageEl = addMessage('assistant', '', true);
+                                    }
+                                    assistantMessage += data.content;
+                                    updateMessage(messageEl, assistantMessage);
+                                } else if (data.type === 'tool') {
+                                    // Show tool usage
+                                    if (messageEl) {
+                                        showToolBadge(messageEl, data.tool);
+                                    }
+                                } else if (data.type === 'validation') {
+                                    // Show validation result
+                                    if (messageEl) {
+                                        showValidationBadge(messageEl, data);
+                                    }
+                                    lastValidation = {
+                                        grounded: data.grounded,
+                                        confidence: data.confidence,
+                                        notes: data.notes
+                                    };
+                                } else if (data.type === 'flashcard_data') {
+                                    // Structured flashcard data from tool - override orchestrator text
+                                    if (messageEl && data.cards && data.cards.length > 0) {
+                                        if (data.format === 'chat' || !data.format || data.format === '') {
+                                            // Rebuild as FRONT/BACK text so formatContent() renders flip cards
+                                            assistantMessage = data.cards.map(c =>
+                                                'FRONT: ' + c.front + '\nBACK: ' + c.back
+                                            ).join('\n\n');
+                                        } else {
+                                            // Export format - wrap as JSON block for export detection
+                                            const exportJson = JSON.stringify({
+                                                flashcard_export: {
+                                                    format: data.format,
+                                                    deck_name: data.deck_name || 'Flashcards',
+                                                    cards: data.cards
+                                                }
+                                            }, null, 2);
+                                            assistantMessage = '```json\n' + exportJson + '\n```';
+                                        }
+                                        updateMessage(messageEl, assistantMessage);
+                                    }
+                                } else if (data.type === 'analytics') {
+                                    // Store interaction_id for feedback
+                                    if (messageEl) {
+                                        messageEl.dataset.interactionId = data.interaction_id;
+                                    }
+                                } else if (data.type === 'done') {
+                                    // Streaming complete - check for export data and save
+                                    checkForExports(messageEl, assistantMessage);
+                                    // Add feedback buttons
+                                    if (messageEl && messageEl.dataset.interactionId) {
+                                        showFeedbackButtons(messageEl, messageEl.dataset.interactionId);
+                                    }
+                                    chatHistory.push({
+                                        role: 'assistant',
+                                        content: assistantMessage,
+                                        validation: lastValidation
+                                    });
+                                    saveChatHistory();
+                                    responseSaved = true;
+                                } else if (data.type === 'error') {
+                                    removeTyping(typingId);
+                                    addMessage('assistant', 'Error: ' + data.content);
+                                    chatHistory.push({ role: 'assistant', content: 'Error: ' + data.content });
+                                    saveChatHistory();
+                                    responseSaved = true;
+                                }
+                            } catch (e) {
+                                // Ignore parse errors
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                removeTyping(typingId);
+                if (!responseSaved && assistantMessage) {
+                    // Connection interrupted (e.g. page refresh) but we have text - save it
+                    chatHistory.push({
+                        role: 'assistant',
+                        content: assistantMessage,
+                        validation: lastValidation
+                    });
+                    saveChatHistory();
+                } else if (!responseSaved) {
+                    addMessage('assistant', 'Sorry, there was an error processing your request.');
+                    chatHistory.push({ role: 'assistant', content: 'Sorry, there was an error processing your request.' });
+                    saveChatHistory();
+                }
+            }
+
+            isStreaming = false;
+            document.getElementById('sendBtn').disabled = false;
+        }
+
+        function addMessage(role, content, streaming = false) {
+            const container = document.getElementById('messagesContainer');
+            const message = document.createElement('div');
+            message.className = `message ${role}`;
+
+            message.innerHTML = `
+                <div class="message-content">${formatContent(content)}</div>
+            `;
+
+            container.appendChild(message);
+            // Expand message width if it contains flashcards
+            const contentEl = message.querySelector('.message-content');
+            if (contentEl && contentEl.querySelector('.flashcard-grid')) {
+                contentEl.classList.add('has-flashcards');
+            }
+            container.scrollTop = container.scrollHeight;
+
+            return message;
+        }
+
+        function updateMessage(messageEl, content) {
+            const contentEl = messageEl.querySelector('.message-content');
+            contentEl.innerHTML = formatContent(content);
+            // Expand message width if it contains flashcards
+            if (contentEl.querySelector('.flashcard-grid')) {
+                contentEl.classList.add('has-flashcards');
+            } else {
+                contentEl.classList.remove('has-flashcards');
+            }
+            document.getElementById('messagesContainer').scrollTop =
+                document.getElementById('messagesContainer').scrollHeight;
+        }
+
+        function formatContent(content) {
+            const cards = [];
+            const codeBlocks = [];
+
+            // Step 1: Process code blocks - extract flashcards, keep normal ones
+            let processed = content.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+                if (/FRONT:\s/i.test(code)) {
+                    const localRegex = /FRONT:\s*([\s\S]*?)\nBACK:\s*([\s\S]*?)(?=\nFRONT:|\s*$)/gi;
+                    let m;
+                    while ((m = localRegex.exec(code)) !== null) {
+                        cards.push({ front: m[1].trim(), back: m[2].trim() });
+                    }
+                    return '__FC__'; // Placeholder where card was
+                }
+                codeBlocks.push(`<pre><code>${code}</code></pre>`);
+                return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
+            });
+
+            // Step 2: Also check remaining text for FRONT:/BACK: (no code blocks)
+            if (cards.length === 0) {
+                const fcRegex = /FRONT:\s*([\s\S]*?)\nBACK:\s*([\s\S]*?)(?=\nFRONT:|\s*$)/gi;
+                let m;
+                while ((m = fcRegex.exec(processed)) !== null) {
+                    cards.push({ front: m[1].trim(), back: m[2].trim() });
+                }
+                if (cards.length > 0) {
+                    processed = processed.replace(/FRONT:\s*[\s\S]*?\nBACK:\s*[\s\S]*?(?=\nFRONT:|\s*$)/gi, '__FC__');
+                }
+            }
+
+            // Step 3: Build card grid and INSERT where cards were (not at end)
+            if (cards.length > 0) {
+                let cardHtml = '<div class="flashcard-grid">';
+                cards.forEach((card, i) => {
+                    const frontText = card.front
+                        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                        .replace(/`([^`]+)`/g, '<code>$1</code>');
+                    const backText = card.back
+                        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                        .replace(/`([^`]+)`/g, '<code>$1</code>')
+                        .replace(/\n/g, '<br>');
+                    cardHtml += `
+                        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+                            <div class="flashcard-inner">
+                                <div class="flashcard-front">
+                                    <span class="flashcard-number">Card ${i + 1}</span>
+                                    <div class="flashcard-content">${frontText}</div>
+                                    <span class="flashcard-hint">click to flip</span>
+                                </div>
+                                <div class="flashcard-back">
+                                    <span class="flashcard-number">Card ${i + 1}</span>
+                                    <div class="flashcard-content">${backText}</div>
+                                    <span class="flashcard-hint">click to flip</span>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+                cardHtml += '</div>';
+
+                // Strip "Flashcard N" / "**Flashcard N**" headers near placeholders
+                processed = processed.replace(/\*{0,2}(?:Flashcard|FLASHCARD)\s*\d+\*{0,2}\s*\n?\s*__FC__/gi, '__FC__');
+
+                // Replace FIRST placeholder with the full card grid
+                processed = processed.replace('__FC__', cardHtml);
+
+                // Remove all remaining placeholders (other card positions)
+                processed = processed.replace(/__FC__/g, '');
+
+                // Clean up leftover "Flashcard N" headers that had no adjacent placeholder
+                processed = processed.replace(/\*{0,2}(?:Flashcard|FLASHCARD)\s*\d+\*{0,2}\s*\n/gi, '');
+
+                // Clean up stray --- separators left between removed cards
+                processed = processed.replace(/\n-{3,}\n/g, '\n');
+            }
+
+            // Step 4: Restore normal code blocks
+            codeBlocks.forEach((block, i) => {
+                processed = processed.replace(`__CODE_BLOCK_${i}__`, block);
+            });
+
+            // Step 5: Standard markdown formatting
+            processed = processed
+                .replace(/\n{3,}/g, '\n\n')       // collapse 3+ newlines to max 2
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n/g, '<br>');
+
+            return processed;
+        }
+
+        function showToolBadge(messageEl, toolName) {
+            const contentEl = messageEl.querySelector('.message-content');
+            const badge = document.createElement('div');
+            badge.className = 'tool-badge';
+            badge.innerHTML = `Using ${toolName.replace(/_/g, ' ')}...`;
+            contentEl.insertBefore(badge, contentEl.firstChild);
+        }
+
+        function showValidationBadge(messageEl, validation) {
+            const contentEl = messageEl.querySelector('.message-content');
+            const grounded = (validation.grounded || 'N/A').toLowerCase();
+
+            const config = {
+                'yes': { icon: 'V', label: 'Verified against materials', css: 'grounded-yes' },
+                'partial': { icon: '~', label: 'Partially verified', css: 'grounded-partial' },
+                'no': { icon: 'X', label: 'Not verified', css: 'grounded-no' },
+                'n/a': { icon: '-', label: 'No materials to check', css: 'grounded-na' }
+            };
+
+            const c = config[grounded] || config['n/a'];
+            const reasoning = validation.reasoning || validation.notes || '';
+
+            // Create wrapper for badge + panel
+            const wrapper = document.createElement('div');
+
+            const badge = document.createElement('div');
+            badge.className = `validation-badge ${c.css}`;
+            badge.innerHTML = `<span class="badge-icon">${c.icon}</span> ${c.label} <span style="opacity:0.5;font-size:0.65rem;margin-left:0.25rem">(click to see reasoning)</span>`;
+
+            // Create reasoning panel (hidden by default)
+            const panel = document.createElement('div');
+            panel.className = 'verification-panel';
+            panel.innerHTML = `
+                <div class="verification-panel-header">Verification Agent Reasoning</div>
+                <div class="verification-panel-body">${reasoning.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+            `;
+
+            // Toggle panel on badge click
+            badge.addEventListener('click', function() {
+                panel.classList.toggle('open');
+            });
+
+            wrapper.appendChild(badge);
+            wrapper.appendChild(panel);
+            contentEl.appendChild(wrapper);
+        }
+
+        function showFeedbackButtons(messageEl, interactionId) {
+            const contentEl = messageEl.querySelector('.message-content');
+            const bar = document.createElement('div');
+            bar.className = 'feedback-bar';
+            bar.innerHTML = `
+                <button class="feedback-btn" data-vote="up" title="Helpful">&#128077;</button>
+                <button class="feedback-btn" data-vote="down" title="Not helpful">&#128078;</button>
+            `;
+            bar.querySelectorAll('.feedback-btn').forEach(btn => {
+                btn.addEventListener('click', () => sendFeedback(btn, interactionId, bar));
+            });
+            contentEl.appendChild(bar);
+        }
+
+        async function sendFeedback(btn, interactionId, bar) {
+            const vote = btn.dataset.vote;
+            bar.querySelectorAll('.feedback-btn').forEach(b => {
+                b.disabled = true;
+                b.classList.remove('selected-up', 'selected-down');
+            });
+            btn.classList.add(vote === 'up' ? 'selected-up' : 'selected-down');
+
+            try {
+                await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ interaction_id: interactionId, feedback: vote })
+                });
+            } catch (e) {
+                console.error('Feedback failed:', e);
+            }
+        }
+
+        function showTyping() {
+            const container = document.getElementById('messagesContainer');
+            const typing = document.createElement('div');
+            typing.className = 'message assistant';
+            typing.id = 'typing-' + Date.now();
+            typing.innerHTML = `
+                <div class="message-content">
+                    <div class="typing-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            `;
+            container.appendChild(typing);
+            container.scrollTop = container.scrollHeight;
+            return typing.id;
+        }
+
+        function removeTyping(id) {
+            const typing = document.getElementById(id);
+            if (typing) typing.remove();
+        }
+
+        async function clearChat() {
+            await fetch(`/api/session/${sessionId}`, { method: 'DELETE' });
+            document.getElementById('messagesContainer').innerHTML = `
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-icon">
+                        <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/></svg>
+                    </div>
+                    <h1 class="welcome-title">Welcome to StudyAgent AI</h1>
+                    <p class="welcome-subtitle">
+                        Your AI-powered study companion. Upload your course materials and ask questions to learn more effectively.
+                    </p>
+                </div>
+            `;
+            // Generate new session and clear saved history
+            sessionId = 'session_' + Date.now();
+            localStorage.setItem('studyagent_session', sessionId);
+            chatHistory = [];
+            localStorage.removeItem('studyagent_history');
+        }
+
+        // ---- Chat History Persistence ----
+        function saveChatHistory() {
+            try {
+                localStorage.setItem('studyagent_history', JSON.stringify(chatHistory));
+            } catch (e) {
+                // If localStorage is full, trim oldest messages and retry
+                if (chatHistory.length > 10) {
+                    chatHistory = chatHistory.slice(-10);
+                    localStorage.setItem('studyagent_history', JSON.stringify(chatHistory));
+                }
+            }
+        }
+
+        function restoreChatHistory() {
+            try {
+                const saved = localStorage.getItem('studyagent_history');
+                if (!saved) return;
+
+                chatHistory = JSON.parse(saved);
+                if (!chatHistory.length) return;
+
+                // Hide welcome screen and render saved messages
+                const welcome = document.getElementById('welcomeScreen');
+                if (welcome) welcome.style.display = 'none';
+
+                for (const msg of chatHistory) {
+                    const el = addMessage(msg.role, msg.content);
+                    if (msg.role === 'assistant') {
+                        if (msg.validation) showValidationBadge(el, msg.validation);
+                        checkForExports(el, msg.content);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to restore chat history:', e);
+                chatHistory = [];
+            }
+        }
+
+        // Toast notifications
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+
+            const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+            toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        // ---- Flashcard Export Detection & Download ----
+        function tryParseFlashcardExport(text) {
+            // Look for the JSON export block in the response
+            const match = text.match(/```json\s*(\{[\s\S]*?"flashcard_export"[\s\S]*?\})\s*```/);
+            if (!match) return null;
+            try {
+                const parsed = JSON.parse(match[1]);
+                if (parsed.flashcard_export && parsed.flashcard_export.cards) {
+                    return parsed.flashcard_export;
+                }
+            } catch (e) { /* not valid JSON */ }
+            return null;
+        }
+
+        function addExportBar(messageEl, exportData) {
+            const contentEl = messageEl.querySelector('.message-content');
+            const bar = document.createElement('div');
+            bar.className = 'export-bar';
+
+            const deckName = exportData.deck_name || 'StudyAgent Flashcards';
+            const cardCount = exportData.cards.length;
+
+            bar.innerHTML = `
+                <span style="font-size:0.8rem;color:var(--text-secondary);width:100%;margin-bottom:0.25rem;">
+                    ${cardCount} flashcards ready to export:
+                </span>
+                <button class="export-btn anki" onclick='downloadAnki(${JSON.stringify(JSON.stringify(exportData))})'>
+                    Download Anki (.apkg)
+                </button>
+                <button class="export-btn csv-export" onclick='downloadCSV(${JSON.stringify(JSON.stringify(exportData))})'>
+                    Download CSV
+                </button>
+            `;
+            contentEl.appendChild(bar);
+        }
+
+        async function downloadAnki(exportDataStr) {
+            try {
+                const exportData = JSON.parse(exportDataStr);
+                showToast('Generating Anki deck...', 'info');
+                const response = await fetch('/api/export/anki', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        deck_name: exportData.deck_name || 'StudyAgent Flashcards',
+                        cards: exportData.cards
+                    })
+                });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Export failed');
+                }
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = (exportData.deck_name || 'flashcards').replace(/\s+/g, '_') + '.apkg';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+                showToast('Anki deck downloaded!', 'success');
+            } catch (e) {
+                showToast('Export failed: ' + e.message, 'error');
+            }
+        }
+
+        async function downloadCSV(exportDataStr) {
+            try {
+                const exportData = JSON.parse(exportDataStr);
+                showToast('Generating CSV...', 'info');
+                const response = await fetch('/api/export/csv', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        deck_name: exportData.deck_name || 'StudyAgent Flashcards',
+                        cards: exportData.cards
+                    })
+                });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Export failed');
+                }
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = (exportData.deck_name || 'flashcards').replace(/\s+/g, '_') + '.csv';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+                showToast('CSV downloaded!', 'success');
+            } catch (e) {
+                showToast('Export failed: ' + e.message, 'error');
+            }
+        }
+
+        function checkForExports(messageEl, content) {
+            const exportData = tryParseFlashcardExport(content);
+            if (exportData) {
+                addExportBar(messageEl, exportData);
+            }
+        }
+
+        // Auto-resize textarea
+        function autoResizeTextarea() {
+            const textarea = document.getElementById('messageInput');
+            textarea.addEventListener('input', () => {
+                textarea.style.height = 'auto';
+                textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+            });
+        }
+
+        // Mobile sidebar toggle
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('open');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+# AWS SDK
+boto3>=1.35.0
+botocore>=1.35.0
+
+# Strands Agents Framework (matching reference implementation)
+strands-agents>=0.1.0
+strands-agents-tools>=0.2.6
+
+# AgentCore SDK (CRITICAL - required for AgentCore deployment)
+bedrock-agentcore
+bedrock-agentcore-starter-toolkit
+mcp
+
+# Web Framework (for local development/testing)
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# PDF Processing
+pypdf>=4.0.0
+python-docx>=1.1.0
+
+# Async Support
+aiohttp>=3.9.0
+
+# Flashcard Export
+genanki>=0.13.0
+
+# Utilities
+python-dotenv>=1.0.0
+pydantic>=2.10.0
+pyyaml
+retrying
